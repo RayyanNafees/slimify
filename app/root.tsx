@@ -6,7 +6,7 @@ import {
   Scripts,
   ScrollRestoration,
 } from "react-router";
-
+import mongoose from 'mongoose'
 import type { Route } from "./+types/root";
 // import "./app.css";
 import '@picocss/pico'
@@ -74,3 +74,8 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
     </main>
   );
 }
+console.log({mongo: process.env.MONGO_URI})
+if (process.env.MONGO_URI)
+  mongoose.connect(process.env.MONGO_URI)
+    .then((m) => console.log(`MongoDB connected on port ${m.connection.port}`))
+    .catch(console.error);

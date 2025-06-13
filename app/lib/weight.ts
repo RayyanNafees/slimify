@@ -6,7 +6,8 @@ const prompt = `
 This is the image of a weight machine. Can be analog or can be degitial. In digital, simply parse the digital output 
 (beware sum times a faint leading zero gives impression of an 8) whilest 
 in analog, parse the analog output taking attention to the needle and the weight meter,
- and return the response in the given structured format
+ and return the response in the given structured format.
+ ALso parse the weight unit if u can see it else default to "kg"
 `
 
 export async function parseWeight(file: File) {
@@ -36,11 +37,14 @@ export async function parseWeight(file: File) {
             weight: {
               type: Type.NUMBER,
             },
+            unit: {
+              type: Type.STRING,
+              default: "kg"
+            },
           },
         },
     
     },
   });
-  const parsed = JSON.parse(result.text ?? '{"weight": 0}');
-  return parsed?.weight
+  return JSON.parse(result.text ?? '{"weight": 0, "unit":"kg"}');
 }

@@ -1,7 +1,9 @@
-import { Form, useActionData, type ActionFunction } from "react-router";
+import { Form, useActionData, useLoaderData, type ActionFunction, type LoaderFunction } from "react-router";
 import type { Route } from "./+types/home";
 import { parseWeight } from "~/lib/weight";
-import {twj} from 'tw-to-css'
+import { twj } from 'tw-to-css'
+import { Weights } from "~/models/Weights.model";
+import { Fragment } from "react/jsx-runtime";
 
 export function meta({ }: Route.MetaArgs) {
   return [
@@ -16,11 +18,26 @@ export const action: ActionFunction = async ({ request }) => {
 
   if (!weightPic) return Response.json({ error: "Invalid pic, reupload", data: { weight: 0 } })
 
-  const weight = await parseWeight(weightPic)
+  const { weight, unit = "kg" } = await parseWeight(weightPic)
+
+  await Weights.insertOne({
+    amount: weight,
+    unit,
+  })
   return Response.json({ error: null, data: { weight } })
 }
+
+export const loader: LoaderFunction = async () =>
+  Response.json((await Weights.find()).map(w => ({
+    id: w.id,
+    weight: w.amount,
+    date: w.createdAt,
+    unit: w.unit,
+  })))
+
 export default function Home() {
   const actionData = useActionData()
+  const loaderData = useLoaderData<{ id: string; weight: number; unit: string; date: string | Date }[]>()
   return <main style={twj("relative")}>
     <header style={twj("relative top-0 mx-10")}>
       <hgroup>
@@ -37,10 +54,13 @@ export default function Home() {
       </Form>
       <small>{actionData?.error}</small>
     </article >
-    {actionData?.data?.weight && <dl style={twj("pl-10")}>
+    {loaderData.length && <dl style={twj("pl-10")}>
+      {loaderData.map(w => (
+        <Fragment key={w.id}>
+          <dt style={twj("font-bold")}>{new Date(w.date).toLocaleDateString()}</dt>
+          <dd>{w.weight} {w.unit}</dd></Fragment>
+      ))}
 
-      <dt style={twj("font-bold")}>{new Date().toLocaleDateString()}</dt>
-      <dd>{actionData.data.weight}</dd>
     </dl>}
     <footer style={twj("absolute bottom-0")}>
 
